@@ -49,26 +49,13 @@ QFontIcon *QFontIcon::instance()
     return mInstance;
 }
 
-QIcon QFontIcon::icon(const QChar &code, const QColor &baseColor, const QString &family)
+QIcon QFontIcon::icon(const QChar &code, QPalette const& palette_reference, const QColor &baseColor, const QString &family)
 {
-    if (instance()->families().isEmpty())
-    {
-        qWarning()<<Q_FUNC_INFO<<"No font family installed";
-        return QIcon();
-    }
-
-    QString useFamily = family;
-    if (useFamily.isEmpty())
-        useFamily = instance()->families().first();
-
-
-    QFontIconEngine * engine = new QFontIconEngine;
-    engine->setFontFamily(useFamily);
+    QFontIconEngine * engine = new QFontIconEngine(palette_reference);
+    engine->setFontFamily(family.isEmpty() ? instance()->families().first() : family);
     engine->setLetter(code);
     engine->setBaseColor(baseColor);
     return QIcon(engine);
-
-
 }
 
 
@@ -96,8 +83,9 @@ QFontIcon::~QFontIcon()
 //=======================================================================================================
 
 
-QFontIconEngine::QFontIconEngine()
-    :QIconEngine()
+QFontIconEngine::QFontIconEngine(QPalette const& palette_reference)
+    : QIconEngine()
+    , palette_reference(palette_reference)
 {
 
 }
@@ -114,18 +102,19 @@ void QFontIconEngine::paint(QPainter *painter, const QRect &rect, QIcon::Mode mo
     font.setPixelSize(drawSize);
 
     QColor penColor;
-    if (!mBaseColor.isValid())
-        penColor = QApplication::palette("QWidget").color(QPalette::Normal,QPalette::ButtonText);
-    else
-        penColor = mBaseColor;
-
-    if (mode == QIcon::Disabled)
-        penColor = QApplication::palette("QWidget").color(QPalette::Disabled,QPalette::ButtonText);
-
-
-    if (mode == QIcon::Selected)
-        penColor = QApplication::palette("QWidget").color(QPalette::Active,QPalette::ButtonText);
-
+    switch(mode) {
+        case QIcon::Disabled:
+            penColor = palette_reference.color(QPalette::Disabled, QPalette::ButtonText);
+            break;
+        case QIcon::Active:
+        case QIcon::Selected:
+            penColor = palette_reference.color(QPalette::Active, QPalette::ButtonText);
+            break;
+        default:
+            penColor = palette_reference.color(QPalette::Normal, QPalette::ButtonText);
+            qDebug() << penColor;
+            break;
+    }
 
     painter->save();
     painter->setPen(QPen(penColor));
@@ -164,9 +153,8 @@ void QFontIconEngine::setBaseColor(const QColor &baseColor)
 
 QIconEngine *QFontIconEngine::clone() const
 {
-    QFontIconEngine * engine = new QFontIconEngine;
+    QFontIconEngine * engine = new QFontIconEngine(palette_reference);
     engine->setFontFamily(mFontFamily);
     engine->setBaseColor(mBaseColor);
     return engine;
 }
-

@@ -34,12 +34,12 @@ SOFTWARE.
 
 class QFontIcon;
 class QFontIconEngine;
-#define FIcon(code) QFontIcon::icon(code)
+#define FIcon QFontIcon::icon
 
 class QFontIconEngine : public QIconEngine
 {
 public:
-    QFontIconEngine();
+    QFontIconEngine(QPalette const& palette_reference);
     ~QFontIconEngine();
     virtual void paint(QPainter * painter, const QRect& rect, QIcon::Mode mode, QIcon::State state)Q_DECL_OVERRIDE ;
     virtual QPixmap pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state)Q_DECL_OVERRIDE;
@@ -54,7 +54,11 @@ private:
     QString mFontFamily;
     QChar mLetter;
     QColor mBaseColor;
+
+    QPalette const& palette_reference;
 };
+
+extern QPalette helper_palette;
 
 class QFontIcon : public QObject
 {
@@ -65,7 +69,7 @@ public:
     static bool addFont(const QString& filename);
     static QFontIcon * instance();
     // main methods. Return icons from code
-    static QIcon icon(const QChar& code, const QColor& baseColor = QColor(),const QString& family = QString());
+    static QIcon icon(const QChar& code, QPalette const& palette_reference = helper_palette, const QColor& baseColor = QColor(),const QString& family = QString());
     // return added fonts
     const QStringList& families() const;
 
