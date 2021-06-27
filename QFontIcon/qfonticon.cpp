@@ -25,136 +25,124 @@ SOFTWARE.
 #include "qfonticon.h"
 #include <QDebug>
 #include <QFontDatabase>
-QFontIcon * QFontIcon::mInstance = Q_NULLPTR;
+QFontIcon* QFontIcon::m_instance = Q_NULLPTR;
 
-bool QFontIcon::addFont(const QString &filename)
-{
-    int id = QFontDatabase::addApplicationFont(filename);
+bool QFontIcon::addFont(QString const& filename) {
+	int const id = QFontDatabase::addApplicationFont(filename);
+	if (id == -1) {
+		qWarning() << QStringLiteral("Cannot load font %0").arg(filename);
+		return false;
+	}
 
-    if (id == -1){
-        qWarning()<<"Cannot load font";
-        return false;
-    }
-
-    QString family = QFontDatabase::applicationFontFamilies(id).first();
-    instance()->addFamily(family);
-    return true;
+	instance()->addFamily(QFontDatabase::applicationFontFamilies(id).first());
+	return true;
 }
 
-QFontIcon *QFontIcon::instance()
-{
-    if (!mInstance)
-        mInstance = new QFontIcon;
-
-    return mInstance;
+QFontIcon* QFontIcon::instance() {
+	if (!m_instance) { m_instance = new QFontIcon; }
+	return m_instance;
 }
 
-QIcon QFontIcon::icon(const QChar &code, QPalette const& palette_reference, const QColor &baseColor, const QString &family)
-{
-    QFontIconEngine * engine = new QFontIconEngine(palette_reference);
-    engine->setFontFamily(family.isEmpty() ? instance()->families().first() : family);
-    engine->setLetter(code);
-    engine->setBaseColor(baseColor);
-    return QIcon(engine);
+QIcon QFontIcon::icon(QChar const& code, QPalette const& palette_reference, QColor const& baseColor, QString const& family) {
+	QFontIconEngine* engine = new QFontIconEngine{ palette_reference, };
+	engine->setFontFamily(family.isEmpty() ? instance()->families().first() : family);
+	engine->setLetter(code);
+	engine->setBaseColor(baseColor);
+	return QIcon(engine);
 }
 
 
-const QStringList &QFontIcon::families() const
-{
-    return mfamilies;
+QStringList const& QFontIcon::families() const {
+	return m_families;
 }
 
-void QFontIcon::addFamily(const QString &family)
-{
-    mfamilies.append(family);
+void QFontIcon::addFamily(QString const& family) {
+	m_families.append(family);
 }
 
 QFontIcon::QFontIcon(QObject *parent)
-    :QObject(parent)
+	: QObject(parent)
 {
-
+	//
 }
 
-QFontIcon::~QFontIcon()
-{
-
+QFontIcon::~QFontIcon() {
+	//
 }
 
 //=======================================================================================================
 
 
 QFontIconEngine::QFontIconEngine(QPalette const& palette_reference)
-    : QIconEngine()
-    , palette_reference(palette_reference)
+	: QIconEngine{}
+	, palette_reference(palette_reference)
 {
+	//
+}
+
+QFontIconEngine::~QFontIconEngine() {
+	//
+}
+
+QPalette::ColorGroup color_group_for_mode(QIcon::Mode const mode) {
+	switch(mode) {
+		case QIcon::Disabled:
+			return QPalette::Disabled;
+		case QIcon::Active:
+		case QIcon::Selected:
+			return QPalette::Active;
+		default:
+			return QPalette::Normal;
+	}
+}
+
+void QFontIconEngine::paint(QPainter*const painter, QRect const&rect, QIcon::Mode const mode, QIcon::State const state) {
+	Q_UNUSED(state);
+	QFont font{ fontFamily, };
+	font.setPixelSize(qRound(rect.height() * 0.9));
+
+	QColor const& penColor = palette_reference.color(color_group_for_mode(mode), QPalette::ButtonText);
+
+	painter->save();
+
+	painter->setPen(QPen{ penColor, });
+	painter->setFont(font);
+	painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, letter);
+
+	painter->restore();
+}
+
+QPixmap QFontIconEngine::pixmap(QSize const& size, QIcon::Mode const mode, QIcon::State const state) {
+	QPixmap pix{ size, };
+	pix.fill(Qt::transparent);
+
+	QPainter painter{ &pix, };
+	paint(&painter, QRect{ QPoint{ 0, 0, }, size, }, mode, state);
+	return pix;
 
 }
 
-QFontIconEngine::~QFontIconEngine()
+void QFontIconEngine::setFontFamily(QString const& family)
 {
+	fontFamily = family;
 }
 
-void QFontIconEngine::paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State state)
+void QFontIconEngine::setLetter(QChar const& letter)
 {
-    Q_UNUSED(state);
-    QFont font = QFont(mFontFamily);
-    int drawSize = qRound(rect.height() * 0.8);
-    font.setPixelSize(drawSize);
-
-    QColor penColor;
-    switch(mode) {
-        case QIcon::Disabled:
-            penColor = palette_reference.color(QPalette::Disabled, QPalette::ButtonText);
-            break;
-        case QIcon::Active:
-        case QIcon::Selected:
-            penColor = palette_reference.color(QPalette::Active, QPalette::ButtonText);
-            break;
-        default:
-            penColor = palette_reference.color(QPalette::Normal, QPalette::ButtonText);
-            qDebug() << penColor;
-            break;
-    }
-
-    painter->save();
-    painter->setPen(QPen(penColor));
-    painter->setFont(font);
-    painter->drawText(rect, Qt::AlignCenter|Qt::AlignVCenter, mLetter);
-
-    painter->restore();
+	this->letter = letter;
 }
 
-QPixmap QFontIconEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state)
+void QFontIconEngine::setBaseColor(QColor const& baseColor)
 {
-    QPixmap pix(size);
-    pix.fill(Qt::transparent);
-
-    QPainter painter(&pix);
-    paint(&painter, QRect(QPoint(0,0),size), mode, state);
-    return pix;
-
-}
-
-void QFontIconEngine::setFontFamily(const QString &family)
-{
-    mFontFamily = family;
-}
-
-void QFontIconEngine::setLetter(const QChar &letter)
-{
-    mLetter = letter;
-}
-
-void QFontIconEngine::setBaseColor(const QColor &baseColor)
-{
-    mBaseColor = baseColor;
+	this->baseColor = baseColor;
 }
 
 
-QIconEngine *QFontIconEngine::clone() const
+QIconEngine* QFontIconEngine::clone() const
 {
-    QFontIconEngine * engine = new QFontIconEngine(palette_reference);
-    engine->setFontFamily(mFontFamily);
-    engine->setBaseColor(mBaseColor);
-    return engine;
+	QFontIconEngine* engine = new QFontIconEngine{ palette_reference, };
+	engine->setFontFamily(fontFamily);
+	engine->setBaseColor(baseColor);
+	engine->setLetter(letter);
+	return engine;
 }

@@ -22,8 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef QFONTICON_H
-#define QFONTICON_H
+#pragma once
 
 #include <QObject>
 #include <QPainter>
@@ -36,54 +35,37 @@ class QFontIcon;
 class QFontIconEngine;
 #define FIcon QFontIcon::icon
 
-class QFontIconEngine : public QIconEngine
-{
+class QFontIconEngine : public QIconEngine {
 public:
-    QFontIconEngine(QPalette const& palette_reference);
-    ~QFontIconEngine();
-    virtual void paint(QPainter * painter, const QRect& rect, QIcon::Mode mode, QIcon::State state)Q_DECL_OVERRIDE ;
-    virtual QPixmap pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state)Q_DECL_OVERRIDE;
-    void setFontFamily(const QString& family);
-    // define icon code using QChar or implicit using ushort ...
-    void setLetter(const QChar& letter);
-    // You can set a base color. I don't advice. Keep system color
-    void setBaseColor(const QColor& baseColor);
-    virtual QIconEngine* clone() const;
+	explicit QFontIconEngine(QPalette const& palette_reference);
+	~QFontIconEngine();
+	void paint(QPainter*const painter, QRect const& rect, QIcon::Mode mode, QIcon::State state) Q_DECL_OVERRIDE;
+	QPixmap pixmap(QSize const&size, QIcon::Mode mode, QIcon::State state) Q_DECL_OVERRIDE;
+	void setFontFamily(QString const& family);
+	void setLetter(QChar const& letter);
+	void setBaseColor(QColor const& baseColor);
+	QIconEngine* clone() const;
+protected:
+	QString fontFamily;
+	QChar letter;
+	QColor baseColor;
 
-private:
-    QString mFontFamily;
-    QChar mLetter;
-    QColor mBaseColor;
-
-    QPalette const& palette_reference;
+	QPalette const& palette_reference;
 };
 
 extern QPalette helper_palette;
 
-class QFontIcon : public QObject
-{
-    Q_OBJECT
-
+class QFontIcon : public QObject {
+	Q_OBJECT
 public:
-    // add Font. By default, the first one is used
-    static bool addFont(const QString& filename);
-    static QFontIcon * instance();
-    // main methods. Return icons from code
-    static QIcon icon(const QChar& code, QPalette const& palette_reference = helper_palette, const QColor& baseColor = QColor(),const QString& family = QString());
-    // return added fonts
-    const QStringList& families() const;
-
+	static bool addFont(QString const& filename);
+	static QFontIcon* instance();
+	static QIcon icon(QChar const& code, QPalette const& palette_reference = helper_palette, QColor const& baseColor = QColor(), QString const& family = QString());
+	QStringList const& families() const;
 protected:
-    void addFamily(const QString& family);
-
-
-private:
-    explicit QFontIcon(QObject *parent = 0);
-    ~QFontIcon();
-    static QFontIcon * mInstance;
-    QStringList mfamilies;
-
-
+	void addFamily(const QString& family);
+	explicit QFontIcon(QObject *parent = 0);
+	~QFontIcon();
+	static QFontIcon* m_instance;
+	QStringList m_families;
 };
-
-#endif // QFONTICON_H
