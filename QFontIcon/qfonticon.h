@@ -24,12 +24,12 @@ SOFTWARE.
 
 #pragma once
 
+#include <QApplication>
+#include <QIconEngine>
 #include <QObject>
 #include <QPainter>
-#include <QIconEngine>
-#include <QApplication>
-#include <QtCore>
 #include <QPalette>
+#include <QtCore>
 
 class QFontIcon;
 class QFontIconEngine;
@@ -39,12 +39,12 @@ class QFontIconEngine : public QIconEngine {
 public:
 	explicit QFontIconEngine(QPalette const& palette_reference);
 	~QFontIconEngine();
-	void paint(QPainter*const painter, QRect const& rect, QIcon::Mode mode, QIcon::State state) Q_DECL_OVERRIDE;
-	QPixmap pixmap(QSize const&size, QIcon::Mode mode, QIcon::State state) Q_DECL_OVERRIDE;
+	void paint(QPainter* const painter, QRect const& rect, QIcon::Mode mode, QIcon::State state) Q_DECL_OVERRIDE;
+	QPixmap pixmap(QSize const& size, QIcon::Mode mode, QIcon::State state) Q_DECL_OVERRIDE;
 	void setFontFamily(QString const& family);
 	void setLetter(QChar const& letter);
 	void setBaseColor(QColor const& baseColor);
-	QIconEngine* clone() const;
+	QIconEngine* clone() const override;
 protected:
 	QString fontFamily;
 	QChar letter;
@@ -64,7 +64,7 @@ public:
 	QStringList const& families() const;
 protected:
 	void addFamily(const QString& family);
-	explicit QFontIcon(QObject *parent = 0);
+	explicit QFontIcon(QObject* parent = 0);
 	~QFontIcon();
 	static QFontIcon* m_instance;
 	QStringList m_families;

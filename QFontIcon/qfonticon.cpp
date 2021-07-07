@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "qfonticon.h"
 #include <QDebug>
 #include <QFontDatabase>
+
+#include "qfonticon.h"
 QFontIcon* QFontIcon::m_instance = Q_NULLPTR;
 
 bool QFontIcon::addFont(QString const& filename) {
@@ -44,13 +45,14 @@ QFontIcon* QFontIcon::instance() {
 }
 
 QIcon QFontIcon::icon(QChar const& code, QPalette const& palette_reference, QColor const& baseColor, QString const& family) {
-	QFontIconEngine* engine = new QFontIconEngine{ palette_reference, };
+	QFontIconEngine* engine = new QFontIconEngine{
+		palette_reference,
+	};
 	engine->setFontFamily(family.isEmpty() ? instance()->families().first() : family);
 	engine->setLetter(code);
 	engine->setBaseColor(baseColor);
 	return QIcon(engine);
 }
-
 
 QStringList const& QFontIcon::families() const {
 	return m_families;
@@ -60,9 +62,7 @@ void QFontIcon::addFamily(QString const& family) {
 	m_families.append(family);
 }
 
-QFontIcon::QFontIcon(QObject *parent)
-	: QObject(parent)
-{
+QFontIcon::QFontIcon(QObject* parent) : QObject(parent) {
 	//
 }
 
@@ -72,11 +72,7 @@ QFontIcon::~QFontIcon() {
 
 //=======================================================================================================
 
-
-QFontIconEngine::QFontIconEngine(QPalette const& palette_reference)
-	: QIconEngine{}
-	, palette_reference(palette_reference)
-{
+QFontIconEngine::QFontIconEngine(QPalette const& palette_reference) : QIconEngine{}, palette_reference(palette_reference) {
 	//
 }
 
@@ -85,7 +81,7 @@ QFontIconEngine::~QFontIconEngine() {
 }
 
 QPalette::ColorGroup color_group_for_mode(QIcon::Mode const mode) {
-	switch(mode) {
+	switch (mode) {
 		case QIcon::Disabled:
 			return QPalette::Disabled;
 		case QIcon::Active:
@@ -96,16 +92,20 @@ QPalette::ColorGroup color_group_for_mode(QIcon::Mode const mode) {
 	}
 }
 
-void QFontIconEngine::paint(QPainter*const painter, QRect const&rect, QIcon::Mode const mode, QIcon::State const state) {
+void QFontIconEngine::paint(QPainter* const painter, QRect const& rect, QIcon::Mode const mode, QIcon::State const state) {
 	Q_UNUSED(state);
-	QFont font{ fontFamily, };
+	QFont font{
+		fontFamily,
+	};
 	font.setPixelSize(qRound(rect.height() * 0.9));
 
 	QColor const& penColor = palette_reference.color(color_group_for_mode(mode), QPalette::ButtonText);
 
 	painter->save();
 
-	painter->setPen(QPen{ penColor, });
+	painter->setPen(QPen{
+		penColor,
+	});
 	painter->setFont(font);
 	painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, letter);
 
@@ -113,34 +113,44 @@ void QFontIconEngine::paint(QPainter*const painter, QRect const&rect, QIcon::Mod
 }
 
 QPixmap QFontIconEngine::pixmap(QSize const& size, QIcon::Mode const mode, QIcon::State const state) {
-	QPixmap pix{ size, };
+	QPixmap pix{
+		size,
+	};
 	pix.fill(Qt::transparent);
 
-	QPainter painter{ &pix, };
-	paint(&painter, QRect{ QPoint{ 0, 0, }, size, }, mode, state);
+	QPainter painter{
+		&pix,
+	};
+	paint(
+		&painter,
+		QRect{
+			QPoint{
+				0,
+				0,
+			},
+			size,
+		},
+		mode,
+		state);
 	return pix;
-
 }
 
-void QFontIconEngine::setFontFamily(QString const& family)
-{
+void QFontIconEngine::setFontFamily(QString const& family) {
 	fontFamily = family;
 }
 
-void QFontIconEngine::setLetter(QChar const& letter)
-{
+void QFontIconEngine::setLetter(QChar const& letter) {
 	this->letter = letter;
 }
 
-void QFontIconEngine::setBaseColor(QColor const& baseColor)
-{
+void QFontIconEngine::setBaseColor(QColor const& baseColor) {
 	this->baseColor = baseColor;
 }
 
-
-QIconEngine* QFontIconEngine::clone() const
-{
-	QFontIconEngine* engine = new QFontIconEngine{ palette_reference, };
+QIconEngine* QFontIconEngine::clone() const {
+	QFontIconEngine* engine = new QFontIconEngine{
+		palette_reference,
+	};
 	engine->setFontFamily(fontFamily);
 	engine->setBaseColor(baseColor);
 	engine->setLetter(letter);
