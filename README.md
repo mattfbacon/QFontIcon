@@ -1,3 +1,5 @@
+I forked this to allow the icons to change color based on a palette variable. This is to support dark mode/changes to application theme/any theme other than default light theme.
+
 # QFontIcon
 QFonticon is a simple Qt class that allows you to create QIcon from a font file like [font Awesome](http://fontawesome.io/).    
 QFontIcon is under [MIT license](https://opensource.org/licenses/MIT)
